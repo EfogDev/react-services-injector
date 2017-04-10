@@ -83,7 +83,6 @@ const injector = new Injector();
 
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = injector;
-    return;
 } else {
     exports.injector = injector;
 }
