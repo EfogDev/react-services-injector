@@ -1,0 +1,25 @@
+{
+  "name": "react-services-injector",
+  "version": "0.0.1",
+  "description": "A library to create and use sigleton-services in your React application.",
+  "main": "index.js",
+  "scripts": {
+    "test": "npm test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/EfogDev/react-services-injector"
+  },
+  "keywords": [
+    "react",
+    "service",
+    "singleton",
+    "injector"
+  ],
+  "author": "Efog <efog@yandex.com>",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/EfogDev/react-services-injector/issues"
+  },
+  "homepage": "https://github.com/EfogDev/react-services-injector#readme"
+}
