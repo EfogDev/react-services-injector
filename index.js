@@ -11,16 +11,20 @@ class Injector {
 
         methods.forEach(method => {
             if (method === 'constructor' || method.indexOf('get') === 0)
-        return;
+                return;
 
-        instance['__' + method] = instance[method];
+            instance['__' + method] = instance[method];
 
-        instance[method] = (...args) => {
-            instance['__' + method].apply(instance, args);
+            instance[method] = (...args) => {
+                instance['__' + method].apply(instance, args);
 
-            this.components.forEach(component => component.instance.forceUpdate());
+                this.components.forEach(component => component.instance.forceUpdate.call(component.instance));
+            };
+        });
+
+        instance.$update = () => {
+            this.components.forEach(component => component.instance.forceUpdate.call(component.instance));
         };
-    });
 
         return instance;
     }
@@ -53,14 +57,19 @@ class Injector {
     }
 
     connect(component) {
-        let key = null;
+        var key = null;
 
         class ConnectedComponent extends component {
             constructor(props) {
                 super(props);
+            }
 
-                this.services = Object.assign({}, injector.get());
+            componentWillMount() {
                 key = injector.connectInstance(this);
+                this.services = Object.assign({}, injector.get());
+
+                if (super.componentWillMount)
+                    super.componentWillMount();
             }
 
             componentWillUnmount() {
@@ -68,10 +77,6 @@ class Injector {
 
                 if (super.componentWillUnmount)
                     super.componentWillUnmount();
-            }
-
-            static get name() {
-                return component.name;
             }
         }
 
@@ -82,8 +87,7 @@ class Injector {
 const injector = new Injector();
 
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = injector;
-    return;
+    module.exports = {injector};
 } else {
     exports.injector = injector;
 }
