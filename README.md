@@ -109,11 +109,11 @@ Services are singletons, so you can use your service in multiple components with
 If you want to do some asynchronous stuff if your service, please use `this.$update()` after it is done (remember `$scope.$apply()`, huh?) For example:
 ```javascript
 addProduct({name, price}) {
-	setTimeout(() => {
-	    this.products.push({category, name, price, stocked});
+    setTimeout(() => {
+        this.products.push({category, name, price, stocked});
 
-	    this.$update(); //here is it
-	}, 200);
+        this.$update(); //here is it
+    }, 200);
 }
 ```
 #### Only ES6 classes
