@@ -1,6 +1,6 @@
 React Services Injector
 ===================
-Got tired with Redux? Really hate that ACTION_THAT_DOES_SOME_ACTION: "ACTION_THAT_DOES_SOME_ACTION"? Or maybe you are used to be an Angular-developer? So then you definitely should try some services in React!
+Got tired with Redux? Really hate that `ACTION_THAT_DOES_SOME_ACTION: "ACTION_THAT_DOES_SOME_ACTION"`? Or maybe you are used to be an Angular-developer? So then you definitely should try some services in React!
 
 Installation
 -------------
@@ -26,8 +26,7 @@ export default class Storage {
 
     getFiltered() {
         return this.products.filter(product => {
-            return (product.name || '')
-                       .toLowerCase()
+            return (product.name || '').toLowerCase()
                        .indexOf(this.filter.toLowerCase()) === 0;
         }) || [];
     }
@@ -71,23 +70,23 @@ class ProductTable extends React.Component {
     constructor(props) {
         super(props);
 
-		this.addRandomProduct = this.addRandomProduct.bind(this);
+        this.addRandomProduct = this.addRandomProduct.bind(this);
     }
 
-	addRandomProduct() {
+    addRandomProduct() {
         this.services.storage.addProduct({
-	        name: 'Test product',
-	        price: Math.floor(Math.random() * 250) + 50
+            name: 'Test product',
+            price: Math.floor(Math.random() * 250) + 50
         });
-	}
+    }
 
     render() {
-	    let {storage} = this.services;
+        let {storage} = this.services;
 
         return (
             <div>
                 {storage.getFiltered().map((product, index) =>
-	                <Product key={index} data={product} />
+                    <Product key={index} data={product} />
                 )}
 
                 <button onClick={() => this.addRandomProduct()}>Add</button>
@@ -103,10 +102,10 @@ export default injector.connect(ProductTable);
 
 Behavior
 ===
-####Singletons
+#### Singletons
 Services are singletons, so you can use your service in multiple components with the same data.
 
-####Asynchronous actions
+#### Asynchronous actions
 If you want to do some asynchronous stuff if your service, please use `this.$update()` after it is done (remember `$scope.$apply()`, huh?) For example:
 ```javascript
 addProduct({name, price}) {
@@ -117,9 +116,9 @@ addProduct({name, price}) {
 	}, 200);
 }
 ```
-####Only ES6 classes
+#### Only ES6 classes
 It is already 2017, right? Please, use ES6 classes instead of `React.createComponent` (especially as even React says that method is deprecated). Also, the library won't connect your functional components -- create a class if you want to use services there.
 
-####Troubleshooting
+#### Troubleshooting
 Please, feel free to create an issue any time if you found a bug or unexpected behavior.
 Feature requests are pretty much acceptable too.
