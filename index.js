@@ -1,3 +1,12 @@
+function Service() {
+    this.services = {};
+
+    this.servicesDidRegistered = () => {
+        this.services = injector.get();
+    }
+}
+
+
 class Injector {
     constructor() {
         this.key = -1;
@@ -41,6 +50,8 @@ class Injector {
         } else {
             this.services.push({name: data.name, instance: this.createInstance(data.service)});
         }
+
+        this.services.forEach(service => service.instance.servicesDidRegistered.apply(service.instance));
     }
 
     connectInstance(instance) {
@@ -87,7 +98,8 @@ class Injector {
 const injector = new Injector();
 
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = {injector};
+    module.exports = {injector, Service};
 } else {
     exports.injector = injector;
+    exports.Service = Service;
 }
