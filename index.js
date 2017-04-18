@@ -1,11 +1,10 @@
-function Service() {
+let Service = function() {
     this.services = {};
 
     this.servicesDidRegistered = () => {
         this.services = injector.get();
     }
-}
-
+};
 
 class Injector {
     constructor() {
@@ -15,24 +14,25 @@ class Injector {
     }
 
     createInstance(service) {
+        let self = this;
         let instance = new service();
         let methods = Object.getOwnPropertyNames(Object.getPrototypeOf(instance));
 
         methods.forEach(method => {
-            if (method === 'constructor' || method.indexOf('get') === 0)
-                return;
+            if (method === 'constructor' || method.indexOf('get') === 0 || method.indexOf('_') === 0)
+        return;
 
-            instance['__' + method] = instance[method];
+        instance['__' + method] = instance[method];
 
-            instance[method] = (...args) => {
-                instance['__' + method].apply(instance, args);
+        instance[method] = function (...args) {
+            instance['__' + method].apply(instance, args);
 
-                this.components.forEach(component => component.instance.forceUpdate.call(component.instance));
-            };
-        });
+            self.components.forEach(component => component.instance.forceUpdate.call(component.instance));
+        };
+    });
 
-        instance.$update = () => {
-            this.components.forEach(component => component.instance.forceUpdate.call(component.instance));
+        instance.$update = function () {
+            self.components.forEach(component => component.instance.forceUpdate.call(component.instance));
         };
 
         return instance;
@@ -52,6 +52,12 @@ class Injector {
         }
 
         this.services.forEach(service => service.instance.servicesDidRegistered.apply(service.instance));
+        this.services.forEach(service => {
+            if (!service.instance.serviceDidConnected)
+        return;
+
+        service.instance.serviceDidConnected.apply(service.instance);
+    });
     }
 
     connectInstance(instance) {
@@ -88,6 +94,10 @@ class Injector {
 
                 if (super.componentWillUnmount)
                     super.componentWillUnmount();
+            }
+
+            static get name() {
+                return component.name;
             }
         }
 

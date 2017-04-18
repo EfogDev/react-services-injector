@@ -10,7 +10,9 @@ Using
 -------------
 At first, create your first service (`services/storage.js`):
 ```javascript
-export default class Storage {
+import {Service} from 'react-services-injector';
+
+export default class Storage extends Service {
     constructor() {
         this.filter = '';
         this.products = [];
@@ -33,7 +35,7 @@ export default class Storage {
 }
 ```
 
-> **Important!** Methods that are not changing anything should be named as `getSomething`, starting with `get` keyword (don't get confused with getters).
+> **Important!** Methods that are not changing anything should be named as `getSomething`, starting with `get` keyword (don't get confused with getters). Also such methods may start from `_` character.
 
 Create an `index.js` in your `services` directory to export them all:
 ```javascript
@@ -97,8 +99,13 @@ class ProductTable extends React.Component {
 
 export default injector.connect(ProductTable);
 ```
-
 > **Important!** You definitely shouldn't use services in constructor. You can't to, actually. Use it, for example, in the `componentWillMount` lifecycle method if you need something to be done once component is created.
+
+You can also use services in another services in the same way in any method except `constructor`.
+
+Initialization
+--------------
+If you need to do some initialization of your service (probably asynchronous), you can use `serviceDidConnected` lifecycle method of service. That is the only lifecycle method so far.
 
 Behavior
 ===
