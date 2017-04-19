@@ -1,4 +1,4 @@
-let Service = function() {
+let Service = function () {
     this.services = {};
 
     this.servicesDidRegistered = () => {
@@ -13,6 +13,14 @@ class Injector {
         this.services = [];
     }
 
+    updateComponents() {
+        return Promise.all(this.components.map(component => {
+            return new Promise((resolve) => {
+                component.instance.forceUpdate.call(component.instance, resolve);
+            });
+        }));
+    }
+
     createInstance(service) {
         let self = this;
         let instance = new service();
@@ -20,19 +28,19 @@ class Injector {
 
         methods.forEach(method => {
             if (method === 'constructor' || method.indexOf('get') === 0 || method.indexOf('_') === 0)
-        return;
+                return;
 
-        instance['__' + method] = instance[method];
+            instance['__' + method] = instance[method];
 
-        instance[method] = function (...args) {
-            instance['__' + method].apply(instance, args);
+            instance[method] = function (...args) {
+                let result = instance['__' + method].apply(instance, args);
 
-            self.components.forEach(component => component.instance.forceUpdate.call(component.instance));
-        };
-    });
+                return self.updateComponents().then(() => result);
+            };
+        });
 
         instance.$update = function () {
-            self.components.forEach(component => component.instance.forceUpdate.call(component.instance));
+            return self.updateComponents();
         };
 
         return instance;
@@ -54,10 +62,10 @@ class Injector {
         this.services.forEach(service => service.instance.servicesDidRegistered.apply(service.instance));
         this.services.forEach(service => {
             if (!service.instance.serviceDidConnected)
-        return;
+                return;
 
-        service.instance.serviceDidConnected.apply(service.instance);
-    });
+            service.instance.serviceDidConnected.apply(service.instance);
+        });
     }
 
     connectInstance(instance) {

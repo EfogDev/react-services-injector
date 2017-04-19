@@ -1,6 +1,6 @@
 {
   "name": "react-services-injector",
-  "version": "0.1.0",
+  "version": "0.2-beta.1",
   "description": "A library to create and use sigleton-services in your React application.",
   "main": "index.js",
   "scripts": {
