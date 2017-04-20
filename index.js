@@ -69,11 +69,13 @@ class Injector {
         return this.key;
     }
 
-    disconnectInstance(id) {
-        let components = this.components.slice(0);
-
-        this.components.length = 0;
-        this.components.concat(components.filter(item => item.key !== id));
+    disconnectInstance(key) {
+        this.components.some((component, index) => {
+            if (component.key === key) {
+                this.components.splice(index, 1);
+                return true;
+            }
+        });
     }
 
     connect(component) {
