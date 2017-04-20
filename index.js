@@ -1,4 +1,4 @@
-let Service = function () {
+let Service = function() {
     this.services = {};
 
     this.servicesDidRegistered = () => {
@@ -13,14 +13,6 @@ class Injector {
         this.services = [];
     }
 
-    updateComponents() {
-        return Promise.all(this.components.map(component => {
-            return new Promise((resolve) => {
-                component.instance.forceUpdate.call(component.instance, resolve);
-            });
-        }));
-    }
-
     createInstance(service) {
         let self = this;
         let instance = new service();
@@ -33,14 +25,14 @@ class Injector {
             instance['__' + method] = instance[method];
 
             instance[method] = function (...args) {
-                let result = instance['__' + method].apply(instance, args);
+                instance['__' + method].apply(instance, args);
 
-                return self.updateComponents().then(() => result);
+                self.components.forEach(component => component.instance.forceUpdate.call(component.instance));
             };
         });
 
         instance.$update = function () {
-            return self.updateComponents();
+            self.components.forEach(component => component.instance.forceUpdate.call(component.instance));
         };
 
         return instance;
@@ -78,19 +70,20 @@ class Injector {
     }
 
     disconnectInstance(id) {
-        this.components = this.components.filter(item => item.key !== id);
+        let components = this.components.slice(0);
+
+        this.components.length = 0;
+        this.components.concat(components.filter(item => item.key !== id));
     }
 
     connect(component) {
-        var key = null;
-
         class ConnectedComponent extends component {
             constructor(props) {
                 super(props);
             }
 
             componentWillMount() {
-                key = injector.connectInstance(this);
+                this.__injector_key = injector.connectInstance(this);
                 this.services = Object.assign({}, injector.get());
 
                 if (super.componentWillMount)
@@ -98,7 +91,7 @@ class Injector {
             }
 
             componentWillUnmount() {
-                injector.disconnectInstance(key);
+                injector.disconnectInstance(this.__injector_key);
 
                 if (super.componentWillUnmount)
                     super.componentWillUnmount();
