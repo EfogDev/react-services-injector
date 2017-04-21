@@ -13,6 +13,14 @@ class Injector {
         this.services = [];
     }
 
+    updateComponents() {
+        return Promise.all(this.components.map(component => {
+            return new Promise(resolve => {
+                component.instance.forceUpdate.call(component.instance, resolve);
+            });
+        }));
+    }
+
     createInstance(service) {
         let self = this;
         let instance = new service();
@@ -25,9 +33,10 @@ class Injector {
             instance['__' + method] = instance[method];
 
             instance[method] = function (...args) {
-                instance['__' + method].apply(instance, args);
+                let result = instance['__' + method].apply(instance, args);
 
-                self.components.forEach(component => component.instance.forceUpdate.call(component.instance));
+                return self.updateComponents()
+                    .then(() => result);
             };
         });
 
