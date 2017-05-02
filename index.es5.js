@@ -32,8 +32,8 @@ function Injector() {
 
             instance['__' + method] = instance[method];
 
-            instance[method] = function (...args) {
-                var result = instance['__' + method].apply(instance, args);
+            instance[method] = function () {
+                var result = instance['__' + method].apply(instance, arguments);
 
                 return self.updateComponents()
                     .then(() => result);
