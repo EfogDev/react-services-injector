@@ -85,7 +85,7 @@ function Injector() {
     this.connectInstance = function(instance) {
         self.components.push({
             key: ++self.key,
-            instance
+            instance: instance
         });
 
         return self.key;
