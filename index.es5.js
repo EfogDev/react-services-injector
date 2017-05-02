@@ -133,12 +133,16 @@ function Injector() {
                 if (_component.prototype.componentWillUnmount) _component.prototype.componentWillUnmount.call(this);
             };
 
-            _createClass(ConnectedComponent, null, [{
-                key: "name",
-                get: function get() {
-                    return component.name;
-                }
-            }]);
+            try {
+                _createClass(ConnectedComponent, null, [{
+                    key: "name",
+                    get: function get() {
+                        return component.name;
+                    }
+                }]);
+            } catch (e) {
+                console.error('Looks like you\'re using fucking iOS.');
+            }
 
             return ConnectedComponent;
         }(component);
