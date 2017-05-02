@@ -15,7 +15,7 @@ function Injector() {
     var self = this;
 
     this.updateComponents = function() {
-        return Promise.all(this.components.map(function(component) {
+        return Promise.all(self.components.map(function(component) {
             return new Promise(function(resolve) {
                 component.instance.forceUpdate.call(component.instance, resolve);
             });
@@ -36,12 +36,16 @@ function Injector() {
                 var result = instance['__' + method].apply(instance, arguments);
 
                 return self.updateComponents()
-                    .then(() => result);
+                    .then(function () {
+                        return result;
+                    });
             };
         });
 
         instance.$update = function () {
-            self.components.forEach(component => component.instance.forceUpdate.call(component.instance));
+            self.components.forEach(function(component) {
+                component.instance.forceUpdate.call(component.instance);
+            });
         };
 
         return instance;
@@ -88,7 +92,7 @@ function Injector() {
     };
 
     this.disconnectInstance = function(key) {
-        self.components.some((component, index) => {
+        self.components.some(function(component, index) {
             if (component.key === key) {
                 self.components.splice(index, 1);
                 return true;
