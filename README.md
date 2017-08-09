@@ -115,7 +115,8 @@ export default injector.connect(App, {
   toRender: ['Storage'] //we only need Storage in the component
 });
 ```
-> **Important!** second argument of `injector.connect` is object containing two arrays: `toRender` and `toUse`. `toRender` should contain names of services that render result of component depends on. Other services that you use in the component should be in the `toUse` array.  
+> **Important!** Second argument of `injector.connect` is object containing two arrays: `toRender` and `toUse`. `toRender` should contain names of services that render result of component depends on. Other services that you use in the component should be in the `toUse` array.
+  
 > **Note:** you shouldn't use services in the class constructor. You can't to, actually. Use it, for example, in the `componentWillMount` lifecycle method if you need something to be done once component is created.
 
 Here is our `Test` component:
