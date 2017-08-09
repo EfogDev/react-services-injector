@@ -1,0 +1,4 @@
+{
+  "plugins": ["transform-object-assign", "es6-promise"],
+  "presets": ["es2015"]
+}
