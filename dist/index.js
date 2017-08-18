@@ -167,17 +167,14 @@ var Injector = function () {
         key: 'connectInstance',
         value: function connectInstance(instance, options) {
             var services = injector.get(true);
+            var toRender = Array.isArray(options && options.toRender) ? options.toRender.map(this.byName) : [];
 
-            var toRender = Array.isArray(options && options.toRender) ? options.toRender.map(this.byName) : options ? [] : services;
-            var toUse = Array.isArray(options && options.toUse) ? options.toUse.map(this.byName) : options ? [] : services;
-
-            instance.services = _extends(this.toObject(toRender), this.toObject(toUse));
+            instance.services = this.toObject(services);
 
             this.components.push({
                 key: ++this.key,
                 instance: instance,
-                toRender: toRender,
-                toUse: toUse
+                toRender: toRender
             });
 
             return this.key;

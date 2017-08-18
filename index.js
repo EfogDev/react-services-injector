@@ -111,17 +111,14 @@ class Injector {
 
     connectInstance(instance, options) {
         const services = injector.get(true);
+        const toRender = Array.isArray(options && options.toRender) ? options.toRender.map(this.byName) : [];
 
-        const toRender = Array.isArray(options && options.toRender) ? options.toRender.map(this.byName) : options ? [] : services;
-        const toUse = Array.isArray(options && options.toUse) ? options.toUse.map(this.byName) : options ? [] : services;
-
-        instance.services = Object.assign(this.toObject(toRender), this.toObject(toUse));
+        instance.services = this.toObject(services);
 
         this.components.push({
             key: ++this.key,
             instance,
-            toRender,
-            toUse
+            toRender
         });
 
         return this.key;

@@ -36,7 +36,7 @@ class Storage extends Service {
 export default Storage;
 ```
 
-> **Important!** You should use getters for any methods, that are not modifying any data in the service. If you use common function for that purpose, it may result into an infinite loop. Any non-getter methods of service will update components that specified the service in their `toUse` or `toRender` options.  
+> **Important!** You should use getters for any method that is not modifying any data in the service. If you use common function for that purpose, it may result into an infinite loop. Any non-getter methods of service will update components that specified the service in their `toRender` property.  
 
 Then, let's create a service that will automatically update the random number (`services/intervalService.js`):
 ```javascript
@@ -54,7 +54,7 @@ class IntervalService extends Service {
   }
 
   serviceDidConnect() {
-    const {Storage} = this.services;
+    const {Storage} = this.services; //any service has access to all other services
 
     setInterval(() => this.enabled && Storage.changeNumber(), 1000);
   }
@@ -115,7 +115,7 @@ export default injector.connect(App, {
   toRender: ['Storage'] //we only need Storage in the component
 });
 ```
-> **Important!** Second argument of `injector.connect` is object containing two arrays: `toRender` and `toUse`. `toRender` should contain names of services that render result of component depends on. Other services that you use in the component should be in the `toUse` array.
+> **Important!** Second argument of `injector.connect` is object containing `toRender` array. `toRender` should contain names of services that render result of component depends on. You will be still able to use any service you want in the component.
   
 > **Note:** you shouldn't use services in the class constructor. You can't to, actually. Use it, for example, in the `componentWillMount` lifecycle method if you need something to be done once component is created.
 
@@ -144,8 +144,7 @@ class Test extends React.Component {
 }
 
 export default injector.connect(Test, {
-  toRender: ['IntervalService'], //render result depends only on IntervalService
-  toUse: ['Storage'] //but we also need to use Storage
+  toRender: ['IntervalService'] //render result depends only on IntervalService
 });
 ```
 
@@ -158,7 +157,10 @@ If you need to do some initialization of your service (probably asynchronous), y
 Behavior
 ========
 #### Data modifying 
-Never modify service fields from outside! Make a method for that. Don't use setters. 
+Never modify service fields from outside! Make a method for that. Don't use setters.
+ 
+#### Helpers
+
 
 #### Data storing
 It's better (not always) to store pure data in the service class and format it in getters.
@@ -181,10 +183,10 @@ changeNumber() {
 #### Only ES6 classes
 It is already 2017, right? Please, use ES6 classes instead of `React.createComponent` (especially as even React says that method is deprecated). Also, the library won't connect your functional components -- create a class if you want to use services there.
 
-#### `toRender` and `toUse`
-It's not important, but strongly recommended to pass options object to the `connect()` method. 
-If you don't pass it, the component will be connected to all services. 
-If you do pass, but don't specify one of `toRender` or `toUse` arrays, component will be connected only to specified services.
+#### `toRender` property
+It is important to pass options object to the `connect()` method. 
+If you don't pass it, the component's render method won't be connected to any services. 
+So it will be never updated.
 
 #### Dependencies
 `require()` function should be supported in the project. 
