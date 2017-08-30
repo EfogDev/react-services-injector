@@ -33,14 +33,20 @@ class Injector {
         this.services = [];
     }
 
-    updateComponents(calledBy) {
-        return Promise.all(this.components.filter(component => {
+    getComponentsToUpdate(calledBy) {
+        return this.components.filter(component => {
             return component.toRender.indexOf(calledBy) !== -1;
-        }).map(component => {
+        });
+    }
+
+    updateComponents(calledBy) {
+        const componentsToUpdate = this.getComponentsToUpdate(calledBy);
+
+        return Promise.all(componentsToUpdate.map(component => {
             return new Promise(resolve => {
                 component.instance.forceUpdate.call(component.instance, resolve);
             });
-        }));
+        })).then(() => componentsToUpdate.map(component => component.instance));
     }
 
     createInstance(service) {
@@ -61,9 +67,21 @@ class Injector {
             const fn = instance[method.name];
 
             instance[method.name] = (function (...args) {
-                let result = fn.apply(instance, args);
+                let result = null;
+
+                try {
+                    result = fn.apply(instance, args);
+                } catch (e) {
+                    return Promise.reject(e);
+                }
 
                 return self.updateComponents(instance)
+                    .then(components => {
+                        if (Array.isArray(service.$executionHandlers))
+                            service.$executionHandlers.forEach(handler => {
+                                handler.call(instance, method.name, args, components);
+                            });
+                    })
                     .then(() => result);
             }).bind(instance);
         });
@@ -75,7 +93,7 @@ class Injector {
         return instance;
     }
 
-    get(arrayFormat) {
+    get(arrayFormat = false) {
         if (arrayFormat)
             return this.services.map(service => service.instance);
 
@@ -111,7 +129,7 @@ class Injector {
 
     connectInstance(instance, options) {
         const services = injector.get(true);
-        const toRender = Array.isArray(options && options.toRender) ? options.toRender.map(this.byName) : [];
+        const toRender = Array.isArray(options && options.toRender) ? options.toRender.map(this.byName) : options ? [] : services;
 
         instance.services = this.toObject(services);
 
@@ -164,11 +182,45 @@ class Injector {
     }
 }
 
+function addExecutionHandler(service, handler) {
+    if (!Array.isArray(service.$executionHandlers))
+        service.$executionHandlers = [];
+
+    service.$executionHandlers.push(handler);
+
+    return service;
+}
+
+function defaultLogger(service) {
+    return addExecutionHandler(service, function (method, args, updatedComponents) {
+        try {
+            console.group(`${this.constructor.name}.${method}`);
+
+            if (args && args.length)
+                console.log('Arguments:', args);
+
+            if (updatedComponents && updatedComponents.length)
+                console.log('Updated:', updatedComponents);
+
+            console.groupEnd();
+        } catch (e) {
+            console.error('An error occured while logging methods execution.', e);
+        }
+    });
+}
+
 const injector = new Injector();
 
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = {injector, Service};
+    module.exports = {
+        injector,
+        Service,
+        addExecutionHandler,
+        defaultLogger
+    };
 } else {
     exports.injector = injector;
     exports.Service = Service;
+    exports.defaultLogger = defaultLogger;
+    exports.addExecutionHandler = addExecutionHandler;
 }

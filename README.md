@@ -1,11 +1,14 @@
 React Services Injector
 ===================
-Got tired with Redux? Or maybe you are used to be an Angular-developer? Then you definitely should try some services in React!
+Got tired with Redux? 
+Or maybe you are used to be an Angular-developer? 
+Then you definitely should try some services in React! 
 The library helps you to connect components one to each other and create shared stores.
 
 Data flow and principles
 -------------
-The main principle of services injector is to update components automatically each time you change any data so you don't need to control that process. Also, the library written in the as-simple-as-possible way: it doesn't require you to write tons of code (as `redux` does (sorry, I hate `redux`)). 
+The main principle of services injector is to update components automatically each time you change any data so you don't need to control that process. 
+Also, the library written in the as-simple-as-possible way: it doesn't require you to write tons of code (as Redux does). Sorry, I hate Redux. 
 
 Installation
 -------------
@@ -143,33 +146,88 @@ class Test extends React.Component {
   }
 }
 
+//render result depends only on IntervalService, 
+//although we use Storage in the method
 export default injector.connect(Test, {
-  toRender: ['IntervalService'] //render result depends only on IntervalService
+  toRender: ['IntervalService']
 });
 ```
-
-You can also use services in another services in the same way in any method except `constructor`.
 
 Initialization
 --------------
 If you need to do some initialization of your service (probably asynchronous), you can use `serviceDidConnect` lifecycle method of service. That is the only lifecycle method so far.
 
+Handling of methods execution
+-----------------------------
+Handlers are designed to help in development and don't supposed to be used in production build.
+You are able to handle any method execution, for example, to log anything that does happen with your data.
+The library already has default logger, but it isn't used by default.
+To use default logger, do something like this when registering services:
+```javascript
+import {injector, defaultLogger} from 'react-services-injector';
+import services from './services';
+
+injector.register(services.map(defaultLogger));
+```
+Of course, you can write your own handler. There is an `addExecutionHandler` function: 
+```javascript
+//returns modified service class
+addExecutionHandler(service, function (method, args, components) {
+  //method — name of called method
+  //args — arguments
+  //components — array of components that has been updated
+  doSomething();
+});
+```
+Example usage:
+```javascript
+import {injector, addExecutionHandler} from 'react-services-injector';
+import services from './services';
+
+function logger(service) {
+  return addExecutionHandler(service, (method, args, components) => {
+    console.log(method, args, components));
+  }
+}
+
+injector.register(services.map(logger));
+```
+You can use multiple handlers:
+```javascript
+injector.register(services.map(logger).map(defaultLogger));
+```
+Or you can use one handler for some services and another handler for others:
+```javascript
+import {TestService1, TestService2, TestService3, TestService4} from './services';
+
+injector.register([
+    ...[TestService1, TestService2].map(defaultLogger),
+    ...[TestService3, TestService4].map(anotherHandler)
+]);
+```
+> **Note:** any handler will be called after method execution and after components updating.
+
 Behavior
 ========
+#### Communication
+In your service you can access `this.services` property same as in components. All services will be avaiable there.
+
 #### Data modifying 
 Never modify service fields from outside! Make a method for that. Don't use setters.
+For example, don't write `Storage.randomNumber = 5` in component. It won't update any components. But it will if you create function `changeNumber(newNumber)` in service and use it in component.
  
 #### Helpers
-
+It isn't a good idea to make services for helper functions like `formatDate` or `objectToArray`. Just make a simple JS class and import it.
 
 #### Data storing
-It's better (not always) to store pure data in the service class and format it in getters.
+It's better (not always) to store pure data in the service and format it in getters.
 
 #### Singletons
-Services are singletons, so you can use your service in multiple components to store/get/modify any data.
+Services are singletons, you can use any service in multiple components to store/get same data.
 
 #### Asynchronous actions
-If you want to do some asynchronous stuff (like http requests or `setTimeout`) if your service, please use `this.$update()` after it is done (remember `$scope.$apply()`, huh?) 
+If you want to do some asynchronous stuff (like http requests or `setTimeout`) in your service, please use `this.$update()` after it is done (remember `$scope.$apply()`, huh?) 
+
 For example:
 ```javascript
 changeNumber() {
@@ -180,18 +238,20 @@ changeNumber() {
     })
 }
 ```
+But the best decision may be to create a method to set new number: it will update components anyway because it isn't asynchronous. Btw, avoid using any async actions in non-async services: it is much better to take away all async methods. For example, you can create some kind of `RequestService` or `APIService` to communicate w/ your backend.
+
 #### Only ES6 classes
-It is already 2017, right? Please, use ES6 classes instead of `React.createComponent` (especially as even React says that method is deprecated). Also, the library won't connect your functional components -- create a class if you want to use services there.
+It is already 2017, right? Please, use ES6 classes instead of `React.createComponent` (especially as even React says that method is deprecated). Also, the library won't connect your functional components — create a class if you want to use services there.
 
 #### `toRender` property
-It is important to pass options object to the `connect()` method. 
+It is important to pass `toRender` array to the `connect()` method. 
 If you don't pass it, the component's render method won't be connected to any services. 
-So it will be never updated.
+So it will never be updated.
 
 #### Dependencies
 `require()` function should be supported in the project. 
 Recommended bundler is `webpack`.
 
 #### Troubleshooting
-Please, feel free to create an issue any time if you found a bug or unexpected behavior.
+Please, feel free to create an issue any time if you find a bug or unexpected behavior.
 Feature requests are pretty much acceptable too.

@@ -68,15 +68,26 @@ var Injector = function () {
     }
 
     _createClass(Injector, [{
+        key: 'getComponentsToUpdate',
+        value: function getComponentsToUpdate(calledBy) {
+            return this.components.filter(function (component) {
+                return component.toRender.indexOf(calledBy) !== -1;
+            });
+        }
+    }, {
         key: 'updateComponents',
         value: function updateComponents(calledBy) {
-            return _Promise.all(this.components.filter(function (component) {
-                return component.toRender.indexOf(calledBy) !== -1;
-            }).map(function (component) {
+            var componentsToUpdate = this.getComponentsToUpdate(calledBy);
+
+            return _Promise.all(componentsToUpdate.map(function (component) {
                 return new _Promise(function (resolve) {
                     component.instance.forceUpdate.call(component.instance, resolve);
                 });
-            }));
+            })).then(function () {
+                return componentsToUpdate.map(function (component) {
+                    return component.instance;
+                });
+            });
         }
     }, {
         key: 'createInstance',
@@ -101,9 +112,19 @@ var Injector = function () {
                         args[_key] = arguments[_key];
                     }
 
-                    var result = fn.apply(instance, args);
+                    var result = null;
 
-                    return self.updateComponents(instance).then(function () {
+                    try {
+                        result = fn.apply(instance, args);
+                    } catch (e) {
+                        return _Promise.reject(e);
+                    }
+
+                    return self.updateComponents(instance).then(function (components) {
+                        if (Array.isArray(service.$executionHandlers)) service.$executionHandlers.forEach(function (handler) {
+                            handler.call(instance, method.name, args, components);
+                        });
+                    }).then(function () {
                         return result;
                     });
                 }.bind(instance);
@@ -117,7 +138,9 @@ var Injector = function () {
         }
     }, {
         key: 'get',
-        value: function get(arrayFormat) {
+        value: function get() {
+            var arrayFormat = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
+
             if (arrayFormat) return this.services.map(function (service) {
                 return service.instance;
             });
@@ -167,7 +190,7 @@ var Injector = function () {
         key: 'connectInstance',
         value: function connectInstance(instance, options) {
             var services = injector.get(true);
-            var toRender = Array.isArray(options && options.toRender) ? options.toRender.map(this.byName) : [];
+            var toRender = Array.isArray(options && options.toRender) ? options.toRender.map(this.byName) : options ? [] : services;
 
             instance.services = this.toObject(services);
 
@@ -237,12 +260,43 @@ var Injector = function () {
     return Injector;
 }();
 
+function addExecutionHandler(service, handler) {
+    if (!Array.isArray(service.$executionHandlers)) service.$executionHandlers = [];
+
+    service.$executionHandlers.push(handler);
+
+    return service;
+}
+
+function defaultLogger(service) {
+    return addExecutionHandler(service, function (method, args, updatedComponents) {
+        try {
+            console.group(this.constructor.name + '.' + method);
+
+            if (args && args.length) console.log('Arguments:', args);
+
+            if (updatedComponents && updatedComponents.length) console.log('Updated:', updatedComponents);
+
+            console.groupEnd();
+        } catch (e) {
+            console.error('An error occured while logging methods execution.', e);
+        }
+    });
+}
+
 var injector = new Injector();
 
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { injector: injector, Service: Service };
+    module.exports = {
+        injector: injector,
+        Service: Service,
+        addExecutionHandler: addExecutionHandler,
+        defaultLogger: defaultLogger
+    };
 } else {
     exports.injector = injector;
     exports.Service = Service;
+    exports.defaultLogger = defaultLogger;
+    exports.addExecutionHandler = addExecutionHandler;
 }
 
