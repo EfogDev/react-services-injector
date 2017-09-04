@@ -36,6 +36,9 @@ class Storage extends Service {
   }
 }
 
+//"publicName" property is important if you use any kind of minimization on your JS
+Storage.publicName = 'Storage';
+
 export default Storage;
 ```
 
@@ -63,10 +66,12 @@ class IntervalService extends Service {
   }
 }
 
+IntervalService.publicName = 'IntervalService';
+
 export default IntervalService;
 ```
-
-> **Important!** Any non-getter methods of service always returns promise. ALWAYS! Even if you return a pure number, you will have to use `.then()` in a component or another service to get value. 
+> **Important!** Any non-getter methods of service always returns promise. ALWAYS! Even if you return a pure number, you will have to use `.then()` in a component or another service to get value.
+> **Note:** please, don't forget to set the `publicName` property. 
 
 Create an `index.js` in your `services` directory to export them all:
 ```javascript

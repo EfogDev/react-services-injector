@@ -28,6 +28,7 @@ class Helpers {
 
 class Injector {
     constructor() {
+        this.registered = false;
         this.key = -1;
         this.components = [];
         this.services = [];
@@ -117,14 +118,19 @@ class Injector {
     }
 
     register(data) {
-        if (Array.isArray(data)) {
-            data.forEach(item => this.services.push({name: item.name, instance: this.createInstance(item)}))
-        } else {
-            this.services.push({name: data.name, instance: this.createInstance(data)});
+        if (this.registered)
+            throw new Error('Services have already been registered.');
+
+        if (!Array.isArray(data)) {
+            data = [data];
         }
+
+        data.forEach(item => this.services.push({name: item.publicName || item.name, instance: this.createInstance(item)}));
 
         this.services.forEach(service => service.instance.servicesDidRegister.apply(service.instance));
         this.services.forEach(service => service.instance.serviceDidConnect && service.instance.serviceDidConnect.apply(service.instance));
+
+        this.registered = true;
     }
 
     connectInstance(instance, options) {

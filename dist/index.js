@@ -62,6 +62,7 @@ var Injector = function () {
     function Injector() {
         _classCallCheck(this, Injector);
 
+        this.registered = false;
         this.key = -1;
         this.components = [];
         this.services = [];
@@ -171,13 +172,15 @@ var Injector = function () {
         value: function register(data) {
             var _this2 = this;
 
-            if (Array.isArray(data)) {
-                data.forEach(function (item) {
-                    return _this2.services.push({ name: item.name, instance: _this2.createInstance(item) });
-                });
-            } else {
-                this.services.push({ name: data.name, instance: this.createInstance(data) });
+            if (this.registered) throw new Error('Services have already been registered.');
+
+            if (!Array.isArray(data)) {
+                data = [data];
             }
+
+            data.forEach(function (item) {
+                return _this2.services.push({ name: item.publicName || item.name, instance: _this2.createInstance(item) });
+            });
 
             this.services.forEach(function (service) {
                 return service.instance.servicesDidRegister.apply(service.instance);
@@ -185,6 +188,8 @@ var Injector = function () {
             this.services.forEach(function (service) {
                 return service.instance.serviceDidConnect && service.instance.serviceDidConnect.apply(service.instance);
             });
+
+            this.registered = true;
         }
     }, {
         key: 'connectInstance',
