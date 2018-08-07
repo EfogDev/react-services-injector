@@ -164,7 +164,7 @@ var Injector = function () {
         key: 'toObject',
         value: function toObject(services) {
             return services.reduce(function (store, service) {
-                return _extends(store, _defineProperty({}, service.constructor.name, service));
+                return _extends(store, _defineProperty({}, service.constructor.publicName || service.constructor.name, service));
             }, {});
         }
     }, {
@@ -197,7 +197,7 @@ var Injector = function () {
             var services = injector.get(true);
             var toRender = Array.isArray(options && options.toRender) ? options.toRender.map(this.byName) : options ? [] : services;
 
-            instance.services = this.toObject(services);
+            instance.services = _extends({}, injector.get());
 
             this.components.push({
                 key: ++this.key,
@@ -276,7 +276,11 @@ function addExecutionHandler(service, handler) {
 function defaultLogger(service) {
     return addExecutionHandler(service, function (method, args, updatedComponents) {
         try {
-            console.group(this.constructor.name + '.' + method);
+            var prototype = Object.getPrototypeOf(this);
+            var _constructor = prototype && prototype.constructor;
+            var name = _constructor && _constructor.publicName;
+
+            console.group((name || this.constructor.name) + '.' + method);
 
             if (args && args.length) console.log('Arguments:', args);
 

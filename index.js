@@ -114,7 +114,7 @@ class Injector {
     }
 
     toObject(services) {
-        return services.reduce((store, service) => Object.assign(store, {[service.constructor.name]: service}), {});
+        return services.reduce((store, service) => Object.assign(store, {[service.constructor.publicName || service.constructor.name]: service}), {});
     }
 
     register(data) {
@@ -137,7 +137,7 @@ class Injector {
         const services = injector.get(true);
         const toRender = Array.isArray(options && options.toRender) ? options.toRender.map(this.byName) : options ? [] : services;
 
-        instance.services = this.toObject(services);
+        instance.services = Object.assign({}, injector.get());
 
         this.components.push({
             key: ++this.key,
@@ -200,7 +200,11 @@ function addExecutionHandler(service, handler) {
 function defaultLogger(service) {
     return addExecutionHandler(service, function (method, args, updatedComponents) {
         try {
-            console.group(`${this.constructor.name}.${method}`);
+            const prototype = Object.getPrototypeOf(this);
+            const constructor = prototype && prototype.constructor;
+            const name = constructor && constructor.publicName;
+
+            console.group(`${name || this.constructor.name}.${method}`);
 
             if (args && args.length)
                 console.log('Arguments:', args);
