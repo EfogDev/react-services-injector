@@ -99,12 +99,15 @@ var Injector = function () {
             var methods = Helpers.getDescriptors(service);
 
             methods.forEach(function (method) {
-                var descriptor = method.descriptor;
+                var name = method.name,
+                    descriptor = method.descriptor;
 
 
                 if (!Helpers.isFunction(descriptor) || descriptor.value === service) return;
 
                 if (Helpers.isGetter(descriptor)) return;
+
+                if (Helpers.isFunction(descriptor) && (name.indexOf('get') === 0 || name.indexOf('find') === 0)) return;
 
                 var fn = instance[method.name];
 
@@ -222,43 +225,45 @@ var Injector = function () {
     }, {
         key: 'connect',
         value: function connect(component, options) {
-            var ConnectedComponent = function (_component) {
-                _inherits(ConnectedComponent, _component);
+            var classes = {};
 
-                function ConnectedComponent(props) {
-                    _classCallCheck(this, ConnectedComponent);
+            classes[component.name] = function (_component) {
+                _inherits(_class, _component);
 
-                    return _possibleConstructorReturn(this, (ConnectedComponent.__proto__ || Object.getPrototypeOf(ConnectedComponent)).call(this, props));
+                function _class(props) {
+                    _classCallCheck(this, _class);
+
+                    return _possibleConstructorReturn(this, (_class.__proto__ || Object.getPrototypeOf(_class)).call(this, props));
                 }
 
-                _createClass(ConnectedComponent, [{
+                _createClass(_class, [{
                     key: 'componentWillMount',
                     value: function componentWillMount() {
                         this.__servicesInjectorKey = injector.connectInstance(this, options);
 
-                        if (_get(ConnectedComponent.prototype.__proto__ || Object.getPrototypeOf(ConnectedComponent.prototype), 'componentWillMount', this)) _get(ConnectedComponent.prototype.__proto__ || Object.getPrototypeOf(ConnectedComponent.prototype), 'componentWillMount', this).call(this);
+                        if (_get(_class.prototype.__proto__ || Object.getPrototypeOf(_class.prototype), 'componentWillMount', this)) _get(_class.prototype.__proto__ || Object.getPrototypeOf(_class.prototype), 'componentWillMount', this).call(this);
                     }
                 }, {
                     key: 'componentWillUnmount',
                     value: function componentWillUnmount() {
                         injector.disconnectInstance(this.__servicesInjectorKey);
 
-                        if (_get(ConnectedComponent.prototype.__proto__ || Object.getPrototypeOf(ConnectedComponent.prototype), 'componentWillUnmount', this)) _get(ConnectedComponent.prototype.__proto__ || Object.getPrototypeOf(ConnectedComponent.prototype), 'componentWillUnmount', this).call(this);
+                        if (_get(_class.prototype.__proto__ || Object.getPrototypeOf(_class.prototype), 'componentWillUnmount', this)) _get(_class.prototype.__proto__ || Object.getPrototypeOf(_class.prototype), 'componentWillUnmount', this).call(this);
                     }
                 }]);
 
-                return ConnectedComponent;
+                return _class;
             }(component);
 
             try {
-                Object.defineProperty(ConnectedComponent, 'name', {
+                Object.defineProperty(classes[component.name], 'name', {
                     get: function get() {
                         return component.name;
                     }
                 });
             } catch (e) {}
 
-            return ConnectedComponent;
+            return classes[component.name];
         }
     }]);
 

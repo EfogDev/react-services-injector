@@ -42,7 +42,7 @@ Storage.publicName = 'Storage';
 export default Storage;
 ```
 
-> **Important!** You should use getters for any method that is not modifying any data in the service. If you use common function for that purpose, it may result into an infinite loop. Any non-getter methods of service will update components that specified the service in their `toRender` property.  
+> **Important!** You should use getters for any method that is not modifying any data in the service. If you use common function for that purpose, it may result into an infinite loop. Any non-getter methods of service will update components that specified the service in their `toRender` property. Exceptions are methods that are starting with "get" or "find", for example `findSomethingById` — they will also not trigger rendering.  
 
 Then, let's create a service that will automatically update the random number (`services/intervalService.js`):
 ```javascript
@@ -123,7 +123,7 @@ export default injector.connect(App, {
   toRender: ['Storage'] //we only need Storage in the component
 });
 ```
-> **Important!** Second argument of `injector.connect` is object containing `toRender` array. `toRender` should contain names of services that render result of component depends on. You will be still able to use any service you want in the component.
+> **Important!** Second argument of `injector.connect` is object containing `toRender` array. `toRender` should contain names of services that render result of component depends on. You will be still able to use any service you want in the component. If you don't pass `toRender` property, injector will consider that the components rendering depends on every service, so please, don't forget to pass it.
   
 > **Note:** you shouldn't use services in the class constructor. You can't to, actually. Use it, for example, in the `componentWillMount` lifecycle method if you need something to be done once component is created.
 

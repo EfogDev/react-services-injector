@@ -57,12 +57,15 @@ class Injector {
         let methods = Helpers.getDescriptors(service);
 
         methods.forEach(method => {
-            const {descriptor} = method;
+            const {name, descriptor} = method;
 
             if (!Helpers.isFunction(descriptor) || descriptor.value === service)
                 return;
 
             if (Helpers.isGetter(descriptor))
+                return;
+
+            if (Helpers.isFunction(descriptor) && (name.indexOf('get') === 0 || name.indexOf('find') === 0))
                 return;
 
             const fn = instance[method.name];
@@ -142,7 +145,7 @@ class Injector {
         this.components.push({
             key: ++this.key,
             instance,
-            toRender
+            toRender,
         });
 
         return this.key;
@@ -158,7 +161,9 @@ class Injector {
     }
 
     connect(component, options) {
-        class ConnectedComponent extends component {
+        const classes = {};
+
+        classes[component.name] = class extends component {
             constructor(props) {
                 super(props);
             }
@@ -176,15 +181,15 @@ class Injector {
                 if (super.componentWillUnmount)
                     super.componentWillUnmount();
             }
-        }
+        };
 
         try {
-            Object.defineProperty(ConnectedComponent, 'name', {
+            Object.defineProperty(classes[component.name], 'name', {
                 get: () => component.name
             });
         } catch (e) {}
 
-        return ConnectedComponent;
+        return classes[component.name];
     }
 }
 
