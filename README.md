@@ -1,4 +1,4 @@
-React Services Injector
+React Services Injector !DEPRECATED
 ===================
 Got tired with Redux? 
 Or maybe you are used to be an Angular-developer? 
